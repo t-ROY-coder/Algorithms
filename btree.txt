@@ -1,0 +1,240 @@
+//btree
+#include<iostream>
+using namespace std;
+# define m 5
+struct bnode
+{
+       int keytally;
+       int key[m-1];
+       bnode *pointer[m];
+       bnode()
+       {
+       keytally=0;
+       for(int i=0;i<m;i++)
+       pointer[i]=NULL;
+       }
+}; 
+class btree
+{
+      public:
+             struct bnode *root;
+	     int s;
+             btree();
+             struct bnode* findnode(int x);
+             struct bnode* findparent(struct bnode *p);
+             void insert(int k);
+             int findpos(struct bnode *p,int k);
+             void split(bnode *(&node),bnode *(&node1),int &);
+             int sort(int a[],int k);
+             void print();
+				 void sprint(struct bnode *root);
+				 
+};
+btree::btree()
+{
+              root=NULL;
+              s=0;
+}
+
+void btree::print()
+{
+	  sprint(root);
+}
+void btree::sprint(bnode *root)
+{
+     if(root!=NULL)
+     {
+     //cout<<"\nnode:"<<(s++)<<": ";              
+     for(int i=0;i<(root->keytally);i++)
+     {
+             sprint(root->pointer[i]);
+             //cout<<"\nin node:"<<(s-2)<<":";
+             cout<<root->key[i]<<"  ";
+     }
+     sprint(root->pointer[(root->keytally)]);
+     }
+}
+int btree::sort(int a[],int k)
+{
+        int i=0;
+        if(k>a[m-2])
+		  {
+        return (m-1);
+        }
+        else
+        {
+        while((k>a[i])&&(i<(m-2)))
+`        {
+                     i++;
+        }
+        return (i);
+        }
+    
+}
+    
+void btree::split(bnode *(&node),bnode *(&v),int &k)
+{
+     int a[m],i;
+     bnode *b[m+1],*node2;
+     node2=new bnode;
+     for(i=0;i<(m-1);i++)
+	  {
+             a[i]=node->key[i];
+             b[i]=node->pointer[i];
+     }
+     b[m-1]=node->pointer[m-1];
+     int j=sort(a,k);
+                 for(int l=m-1;l>j;l--)
+                {
+                        a[l]=a[l-1];
+                        b[l+1]=b[l];
+                }
+               a[j]=k;
+               b[j+1]=v;
+                
+     for(i=0;i<=m/2;i++)
+     {
+                        node->key[i]=a[i];
+                        node->pointer[i]=b[i];
+     }
+    
+	  for(i=(m/2)+1;i<m;i++)
+     {
+                           node2->key[i-(m/2)-1]=a[i];
+                           node2->pointer[i-(m/2)-1]=b[i];
+     }
+     node2->pointer[i-(m/2)-1]=b[i];
+     node->keytally=m/2;
+     for(int y=node->keytally+1;y<m;y++)
+     {
+             node->pointer[y]=NULL;
+             node2->pointer[y]=NULL;
+     }
+     node2->keytally=m/2;
+     k=a[m/2];
+     v=node2;
+     bnode *parent=findparent(node);
+     if(parent==NULL)
+     {
+                     parent=new bnode;
+                     parent->key[0]=k;
+							parent->pointer[0]=node;
+                     parent->pointer[1]=v;
+                     parent->keytally=1;
+                     root=parent;
+     }
+     else if(parent->keytally<(m-1))
+     {
+          i=findpos(parent,k);
+                for(int j=parent->keytally;j>i;j--)
+                {
+                        parent->key[j]=parent->key[j-1];
+                        parent->pointer[j+1]=parent->pointer[j];
+                }
+                
+                parent->key[i]=k;                
+                parent->pointer[i+1]=v;
+                (parent->keytally)++;
+      }       
+      else if(parent->keytally==m-1)
+      {
+			  split(parent,v,k);
+      }
+}                        
+                              
+   
+int btree::findpos(struct bnode *p,int k)
+{
+    int i=0;
+    while((p->key[i]<k)&&(i<p->keytally))
+    {
+                                           i++;
+    }
+    return i;
+}
+struct bnode* btree::findnode(int x)
+{
+       struct bnode *p,*q;
+       p=root;
+       int flag=0;
+       if(p==NULL)
+       {
+           return root;
+       }
+       for(int i=0;i<m;i++)
+       {
+               if(p->pointer[i]!=NULL)
+               {
+                                      flag=1;
+               }
+       }
+       if(flag==0)
+       return root;
+       while(p!=NULL)
+       {
+                     q=p;
+                         int j=0;
+                         while((p->key[j]<x)&&(j<p->keytally))
+                         j++;
+        p=p->pointer[j];
+        }
+		  return q;
+}
+struct bnode* btree::findparent(struct bnode *p)
+{
+       struct bnode *r,*q;
+       q=root;
+       r=root;
+       int y=p->key[0];
+       if(p==root)
+       return NULL;
+       while(q!=p)
+       {
+                  r=q;
+                  int j=0;
+                  while((q->key[j]<y)&&(j<q->keytally))
+                  j++;
+       q=q->pointer[j];
+       }
+       return r;
+}
+void btree::insert(int k)
+{
+     struct bnode *node,*node2;
+     node=findnode(k);
+     node2=NULL;
+     if(node==NULL)
+     {
+                   root=new bnode;
+                   root->key[0]=k;
+                   (root->keytally)++;
+                   return;
+     }
+      int i=findpos(node,k);
+      if(node->keytally<(m-1))
+      {
+                for(int j=node->keytally;j>i;j--)
+                {
+                        node->key[j]=node->key[j-1];
+                }
+                node->key[i]=k;
+					 (node->keytally)++;
+      }       
+      else if(node->keytally==m-1)
+      {
+           split(node,node2,k);
+      }
+}                        
+int main()
+{
+     btree b;
+     int x;
+     for(int i=0;i<20;i++)
+      {
+              cin>>x;
+              b.insert(x);
+              }
+              b.print();
+              cin>>x;
+              return 0;                              
+}
